@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/wmentor/go-magnetar/internal/plugin"
@@ -72,7 +73,10 @@ func (p *Plugin) execute(ctx context.Context, params *plugin.ChatCommandInput) (
 
 // isDangerousCommand checks if the command matches any dangerous pattern.
 func isDangerousCommand(cmd string) bool {
-	lower := strings.ToLower(cmd)
+	input := cmd
+	if runtime.GOOS == "windows" {
+		input = strings.ToLower(cmd)
+	}
 
 	// Block dangerous patterns using regex for more complex matching
 	dangerousPatterns := []*regexp.Regexp{
@@ -88,10 +92,18 @@ func isDangerousCommand(cmd string) bool {
 		regexp.MustCompile(`(?i)\bzsh\s+-c\b`),
 		// Pipe to shell
 		regexp.MustCompile(`(?i)(curl|wget)\b.*\|\s*(bash|sh|zsh)\b`),
+		// Dangerous commands (issue #205): rd, rmdir, reboot, shutdown, del, assoc
+		// Case-insensitive on Windows (input lowercased above), case-sensitive on Unix.
+		regexp.MustCompile(`\brd\b`),
+		regexp.MustCompile(`\brmdir\b`),
+		regexp.MustCompile(`\breboot\b`),
+		regexp.MustCompile(`\bshutdown\b`),
+		regexp.MustCompile(`\bdel\b`),
+		regexp.MustCompile(`\bassoc\b`),
 	}
 
 	for _, pattern := range dangerousPatterns {
-		if pattern.MatchString(lower) {
+		if pattern.MatchString(input) {
 			return true
 		}
 	}

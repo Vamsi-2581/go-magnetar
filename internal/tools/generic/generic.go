@@ -13,6 +13,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
@@ -71,6 +72,18 @@ var blockList = []*regexp.Regexp{
 }
 
 var envFilter = regexp.MustCompile(`(?i)(pass|secr|cred|token|key|auth|pwd|cert|sign|salt|bearer|amqp|connect)`)
+
+func init() {
+	// Dangerous commands requested in issue #205: rd, rmdir, reboot, shutdown, del, assoc.
+	// Case-insensitive on Windows (where these are native), case-sensitive on Unix.
+	prefix := ""
+	if runtime.GOOS == "windows" {
+		prefix = "(?i)"
+	}
+	for _, cmd := range []string{"rd", "rmdir", "reboot", "shutdown", "del", "assoc"} {
+		blockList = append(blockList, regexp.MustCompile(prefix+`^\s*`+cmd+`\b`))
+	}
+}
 
 type fixedSizeWriter struct {
 	data    []byte
