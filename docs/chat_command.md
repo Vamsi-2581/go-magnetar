@@ -8,7 +8,7 @@ go-magnetar provides several built-in chat commands accessible from the interact
 |---|---|---|
 | `/help` | `/h` | Show the list of available chat commands |
 | `/exit` | `/quit` | End the session and exit the program |
-| `/compact` | — | Immediately compress conversation history via the summarizer |
+| `/compact [soft\|full]` | — | Immediately compress conversation history via the summarizer |
 | `/new` | — | Start a new session and clear conversation history |
 | `/stat` | — | Print context statistics: messages, tokens, bytes, LLM model, RAG model, vector size |
 | `/index` | `/i` | Index file or URL into RAG knowledge base (auto-detects URL vs file) |
@@ -24,6 +24,39 @@ go-magnetar provides several built-in chat commands accessible from the interact
 | `/profile` | — | Show current profile or switch to a different profile |
 | `/timing` | — | Toggle execution time display (on\|off) |
 | `/skill` | `/sk` | List available skills or load/activate a skill |
+
+## /compact Command
+
+Immediately compress conversation history via the summarizer:
+
+```
+> /compact
+Context compacted: 12 → 7 messages.
+
+> /compact soft
+Context compacted: 12 → 7 messages.
+
+> /compact full
+Context compacted: 12 → 2 messages.
+```
+
+- `/compact` — runs compaction using the strategy configured via `compact.mode` in `config.yml` (`soft` by default).
+- `/compact soft` — runs direct soft compaction (preserves the last `compact.save_tail` messages).
+- `/compact full` — runs full compaction (summarizes the entire conversation into a single message).
+
+The default strategy configured via `compact.mode` in `config.yml` supports:
+
+- **`soft`** (default): Summarizes older conversation messages while preserving the last `compact.save_tail` messages unchanged (`[system, summary, ...tail]`).
+- **`compact`**: Reads the full conversation history, uses the LLM to generate a summary of the entire conversation, and replaces the entire history with a single summary message alongside the system prompt (`[system, summary]`).
+
+**Configuration:**
+
+```yaml
+compact:
+  mode: soft      # soft (default) or compact
+  threshold: 0    # token threshold for automatic compaction (0 = 80% of llm.context)
+  save_tail: 6    # trailing messages preserved in soft mode
+```
 
 ## /fetch Command
 
