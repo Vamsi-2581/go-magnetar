@@ -91,6 +91,10 @@ func (t *Tool) WebFetch(ctx context.Context, params *Params) (any, error) {
 }
 
 func (t *Tool) WebFetchEngine(ctx context.Context, urlStr string, isFetch bool) (string, error) {
+	if !strings.Contains(urlStr, "://") {
+		urlStr = "https://" + urlStr
+	}
+
 	if t.cfg.String("confluence.base_url") != "" && t.cfg.Bool("confluence.enable") {
 		if strings.HasPrefix(urlStr, t.cfg.String("confluence.base_url")+"/spaces/") ||
 			strings.HasPrefix(urlStr, t.cfg.String("confluence.base_url")+"/x/") ||
