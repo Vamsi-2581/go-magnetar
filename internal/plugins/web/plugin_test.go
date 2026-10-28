@@ -66,7 +66,7 @@ func TestInitRegistersWebToolsUnlessDisabled(t *testing.T) {
 			for _, tool := range state.ToolStore.Tools() {
 				names = append(names, tool.Name)
 			}
-			assert.Equal(t, tt.tools, names)
+			assert.ElementsMatch(t, tt.tools, names)
 		})
 	}
 }
